@@ -1,4 +1,4 @@
-# Erudite LMS — платформа самообучения с геймификацией
+# KnovaLand — платформа самообучения с геймификацией
 
 Дипломный проект: платформа для самообучения на **Django + Django REST Framework**.
 Поддерживает авторизацию по JWT, управление курсами/разделами/материалами, тестирование знаний
@@ -87,7 +87,7 @@ python manage.py runserver
 
 ```
 DB_ENGINE=django.db.backends.postgresql
-DB_NAME=erudite
+DB_NAME=knova
 DB_USER=postgres
 DB_PASSWORD=postgres
 DB_HOST=127.0.0.1

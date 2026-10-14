@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: erudite
+      POSTGRES_DB: knova
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
@@ -30,7 +30,7 @@ services:
       - DEBUG=False
       - ALLOWED_HOSTS=localhost,127.0.0.1
       - DB_ENGINE=django.db.backends.postgresql
-      - DB_NAME=erudite
+      - DB_NAME=knova
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_HOST=db

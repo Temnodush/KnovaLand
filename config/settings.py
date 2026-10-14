@@ -73,7 +73,7 @@ if DB_ENGINE == "django.db.backends.postgresql":
     DATABASES = {
         "default": {
             "ENGINE": DB_ENGINE,
-            "NAME": os.getenv("DB_NAME", "erudite"),
+            "NAME": os.getenv("DB_NAME", "knova"),
             "USER": os.getenv("DB_USER", "postgres"),
             "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),
             "HOST": os.getenv("DB_HOST", "127.0.0.1"),
@@ -114,7 +114,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Web UI (server-rendered)
-SITE_NAME = os.getenv("SITE_NAME", "Erudite")
+SITE_NAME = os.getenv("SITE_NAME", "KnovaLand")
 LOGIN_URL = "web:login"
 LOGIN_REDIRECT_URL = "web:dashboard"
 LOGOUT_REDIRECT_URL = "web:home"
@@ -145,7 +145,7 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Erudite LMS API",
+    "TITLE": "KnovaLand API",
     "DESCRIPTION": "Платформа самообучения — API для курсов, материалов и тестирования",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
