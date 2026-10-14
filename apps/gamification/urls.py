@@ -7,6 +7,7 @@ from .views import (
     LeaderboardView,
     MyEnrollmentsView,
     MyProfileView,
+    PurchaseView,
 )
 
 urlpatterns = [
@@ -15,5 +16,6 @@ urlpatterns = [
     path("game/achievements/", AchievementListView.as_view(), name="game-achievements"),
     path("game/enrollments/", MyEnrollmentsView.as_view(), name="game-enrollments"),
     path("game/enroll/", EnrollView.as_view(), name="game-enroll"),
+    path("game/purchase/", PurchaseView.as_view(), name="game-purchase"),
     path("game/progress/", CompleteMaterialView.as_view(), name="game-progress"),
 ]

@@ -10,6 +10,7 @@ urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
     path("courses/<int:pk>/", views.course_detail, name="course-detail"),
     path("courses/<int:pk>/enroll/", views.enroll_course, name="enroll"),
+    path("courses/<int:pk>/buy/", views.buy_course, name="buy"),
     path("lessons/<int:pk>/", views.lesson_detail, name="lesson-detail"),
     path("lessons/<int:pk>/trainer/", views.trainer, name="trainer"),
     path("lessons/<int:pk>/trainer/submit/", views.trainer_submit, name="trainer-submit"),

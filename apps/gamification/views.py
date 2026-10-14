@@ -66,18 +66,50 @@ class MyEnrollmentsView(generics.ListAPIView):
 
 
 class EnrollView(APIView):
-    """POST /api/game/enroll/ — записаться на курс."""
+    """POST /api/game/enroll/ — записаться на курс (платный требует покупки)."""
 
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         serializer = EnrollRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        enrollment, created = services.enroll(request.user, serializer.validated_data["course"])
+        course = serializer.validated_data["course"]
+        if not services.user_has_access(request.user, course):
+            return Response(
+                {"detail": "Курс платный — сначала оформите покупку."},
+                status=status.HTTP_402_PAYMENT_REQUIRED,
+            )
+        enrollment, created = services.enroll(request.user, course)
         return Response(
             {
                 "enrollment": EnrollmentSerializer(enrollment).data,
                 "created": created,
+            },
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+
+class PurchaseView(APIView):
+    """POST /api/game/purchase/ — купить курс (mock-оплата) и получить доступ."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = EnrollRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        course = serializer.validated_data["course"]
+        if not course.is_paid:
+            return Response(
+                {"detail": "Курс бесплатный — покупка не требуется."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        purchase, created = services.purchase_course(request.user, course)
+        return Response(
+            {
+                "purchased": True,
+                "created": created,
+                "course": course.id,
+                "amount": str(purchase.amount),
             },
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )

@@ -29,12 +29,22 @@
 </div>
 
 {% if not is_enrolled %}
-  <form method="post" action="{% url 'web:enroll' course.id %}" class="mt-5">
-    {% csrf_token %}
-    <button class="rounded-xl bg-brand-600 px-6 py-3 font-semibold hover:bg-brand-500">
-      Записаться на курс (+10 XP)
-    </button>
-  </form>
+  {% if course.is_paid and not has_access %}
+    <form method="post" action="{% url 'web:buy' course.id %}" class="mt-5">
+      {% csrf_token %}
+      <button class="rounded-xl bg-amber-500 px-6 py-3 font-semibold text-slate-900 hover:bg-amber-400">
+        🔓 Купить за {{ course.price }} ₽
+      </button>
+    </form>
+    <p class="mt-2 text-xs text-slate-500">После покупки откроется доступ ко всем урокам курса.</p>
+  {% else %}
+    <form method="post" action="{% url 'web:enroll' course.id %}" class="mt-5">
+      {% csrf_token %}
+      <button class="rounded-xl bg-brand-600 px-6 py-3 font-semibold hover:bg-brand-500">
+        Записаться на курс{% if not course.is_paid %} (бесплатно){% endif %} (+10 XP)
+      </button>
+    </form>
+  {% endif %}
 {% else %}
   {% if next_lesson %}
     <a href="{% url 'web:lesson-detail' next_lesson.id %}"

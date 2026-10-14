@@ -250,3 +250,23 @@ class PlayerSkill(models.Model):
 
     def __str__(self):
         return f"{self.profile.user} — {self.skill.title}"
+
+
+class Purchase(models.Model):
+    """Покупка курса пользователем (доступ к платным курсам)."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="purchases"
+    )
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="purchases")
+    amount = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name="Сумма, ₽")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата покупки")
+
+    class Meta:
+        verbose_name = "Покупка курса"
+        verbose_name_plural = "Покупки курсов"
+        unique_together = ("user", "course")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user} купил {self.course} за {self.amount} ₽"

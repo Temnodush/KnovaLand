@@ -50,6 +50,7 @@ COURSES = [
         "title": "Python",
         "icon": "🐍",
         "cover": "card_python.png",
+        "price": 0,
         "description": (
             "Пошаговый курс по основам Python: от первой программы до собственных функций. "
             "Уроки открываются по мере прохождения, а в конце каждого — тренажёр."
@@ -283,6 +284,7 @@ COURSES = [
         "title": "JavaScript",
         "icon": "🟨",
         "cover": "javascript.png",
+        "price": 990,
         "description": (
             "Основы языка JavaScript: переменные, функции, массивы и работа с DOM. "
             "Язык, который оживляет веб-страницы в браузере."
@@ -538,6 +540,7 @@ COURSES = [
         "title": "C#",
         "icon": "🟪",
         "cover": "csharp.png",
+        "price": 990,
         "description": (
             "Основы C# и платформы .NET: переменные, управляющие конструкции, коллекции "
             "и объектно-ориентированное программирование."
@@ -810,6 +813,7 @@ COURSES = [
         "title": "Java",
         "icon": "☕",
         "cover": "java.png",
+        "price": 1290,
         "description": (
             "Основы Java: вывод, типы данных, условия, циклы, массивы, методы и классы. "
             "Один из самых востребованных языков для серверной разработки."
@@ -1109,6 +1113,7 @@ class Command(BaseCommand):
             is_published=True,
             cover=data.get("cover", ""),
             icon=data.get("icon", "📘"),
+            price=data.get("price", 0),
         )
         for section_data in data["sections"]:
             self._create_section(course, teacher, section_data, skills)

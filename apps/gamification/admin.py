@@ -7,6 +7,7 @@ from .models import (
     PlayerAchievement,
     PlayerProfile,
     PlayerSkill,
+    Purchase,
     SectionSkill,
     Skill,
     XPTransaction,
@@ -61,6 +62,13 @@ class AchievementAdmin(admin.ModelAdmin):
 @admin.register(Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "course", "xp", "started_at", "completed_at")
+    list_filter = ("course",)
+    search_fields = ("user__email", "course__title")
+
+
+@admin.register(Purchase)
+class PurchaseAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "course", "amount", "created_at")
     list_filter = ("course",)
     search_fields = ("user__email", "course__title")
 

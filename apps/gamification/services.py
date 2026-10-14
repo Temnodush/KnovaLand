@@ -13,6 +13,7 @@ from .models import (
     PlayerAchievement,
     PlayerProfile,
     PlayerSkill,
+    Purchase,
     SectionSkill,
     XPTransaction,
 )
@@ -25,6 +26,7 @@ COURSE_XP_PER_LEVEL = 100
 XP_PER_LESSON = 100
 XP_PER_TRAINER_PASS = 50
 XP_PER_SKILL = 75
+XP_PER_PURCHASE = 20
 
 
 def xp_required_for_level(level):
@@ -246,6 +248,28 @@ def enroll(user, course):
         profile = get_profile(user)
         award_xp(profile, 10, reason=f"enroll:{course.id}")
     return enrollment, created
+
+
+# --- Покупка курсов (монетизация) --------------------------------------------
+def user_has_access(user, course):
+    """Есть ли у пользователя доступ к курсу: бесплатный или купленный."""
+    if not course.is_paid:
+        return True
+    return Purchase.objects.filter(user=user, course=course).exists()
+
+
+def purchase_course(user, course):
+    """Купить курс: записать покупку и сразу зачислить пользователя.
+
+    Возвращает (purchase, created). Идемпотентно.
+    """
+    purchase, created = Purchase.objects.get_or_create(
+        user=user, course=course, defaults={"amount": course.price}
+    )
+    if created:
+        award_xp(get_profile(user), XP_PER_PURCHASE, reason=f"purchase:{course.id}")
+        enroll(user, course)
+    return purchase, created
 
 
 def refresh_course_completion(user, course):

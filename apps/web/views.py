@@ -175,6 +175,7 @@ def course_detail(request, pk):
         "sections": sections,
         "enrollment": enrollment,
         "is_enrolled": enrollment is not None,
+        "has_access": services.user_has_access(request.user, course),
         "percent": percent,
         "total_lessons": total_lessons,
         "next_lesson": services.next_lesson(request.user, course),
@@ -327,9 +328,29 @@ def complete_material(request, pk):
 @login_required
 @require_POST
 def enroll_course(request, pk):
-    """Записаться на курс."""
+    """Записаться на курс (платный требует покупки)."""
     course = get_object_or_404(Course, pk=pk)
+    if not services.user_has_access(request.user, course):
+        messages.warning(request, "Курс платный — сначала оформите покупку.")
+        return redirect("web:course-detail", pk=course.id)
     _, created = services.enroll(request.user, course)
     if created:
         messages.success(request, f"Вы записались на курс «{course.title}»! +10 опыта")
+    return redirect("web:course-detail", pk=course.id)
+
+
+@login_required
+@require_POST
+def buy_course(request, pk):
+    """Купить курс (mock-оплата) и получить доступ."""
+    course = get_object_or_404(Course, pk=pk)
+    if not course.is_paid:
+        messages.info(request, "Этот курс бесплатный — можно сразу записаться.")
+        return redirect("web:course-detail", pk=course.id)
+    _, created = services.purchase_course(request.user, course)
+    if created:
+        messages.success(
+            request,
+            f"Курс «{course.title}» куплен за {course.price} ₽! Доступ открыт, +20 опыта.",
+        )
     return redirect("web:course-detail", pk=course.id)

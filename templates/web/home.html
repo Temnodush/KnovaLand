@@ -42,6 +42,10 @@
             <div class="absolute inset-0 grid place-items-center bg-slate-800/40 text-7xl">{{ course.icon }}</div>
             <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent"></div>
           {% endif %}
+          <div class="absolute top-3 right-3 z-10 rounded-full px-3 py-1 text-xs font-semibold
+                      {% if course.is_paid %}bg-amber-500 text-slate-900{% else %}bg-emerald-600 text-white{% endif %}">
+            {% if course.is_paid %}{{ course.price }} ₽{% else %}Бесплатно{% endif %}
+          </div>
           <div class="relative h-full flex flex-col justify-end p-5">
             <h3 class="font-semibold text-xl">{{ course.title }}</h3>
             <p class="mt-1 text-sm text-slate-300 line-clamp-2">{{ course.description|default:"Без описания" }}</p>

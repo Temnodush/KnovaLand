@@ -21,6 +21,13 @@ class Course(models.Model):
         help_text="Имя файла в static/ (например, card_python.png)",
     )
     icon = models.CharField(max_length=16, default="📘", verbose_name="Иконка (emoji)")
+    price = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0,
+        verbose_name="Цена, ₽",
+        help_text="0 — курс бесплатный",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -31,6 +38,10 @@ class Course(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def is_paid(self):
+        return self.price and self.price > 0
 
 
 class Section(models.Model):
