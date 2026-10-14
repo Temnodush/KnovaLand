@@ -57,6 +57,9 @@ class WebRegisterForm(forms.ModelForm):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
         user.role = self.cleaned_data["role"]
+        # Преподаватель получает доступ в Django admin (управление своим контентом).
+        if user.role == User.Role.TEACHER:
+            user.is_staff = True
         if commit:
             user.save()
         return user

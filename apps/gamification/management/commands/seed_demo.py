@@ -1167,4 +1167,8 @@ class Command(BaseCommand):
             user.set_password(password)
             user.save()
             self.stdout.write(f"  + пользователь {username}")
+        # Преподаватель всегда имеет доступ в Django admin.
+        if user.role == User.Role.TEACHER and not user.is_staff:
+            user.is_staff = True
+            user.save(update_fields=["is_staff"])
         return user

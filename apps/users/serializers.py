@@ -59,6 +59,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         password = validated_data.pop("password")
         user = User(**validated_data)
         user.set_password(password)
+        # Преподаватель получает доступ в Django admin.
+        if user.role == User.Role.TEACHER:
+            user.is_staff = True
         user.save()
         return user
 

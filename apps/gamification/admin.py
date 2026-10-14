@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from apps.users.admin_mixins import SuperuserOnlyAdmin
+
 from .models import (
     Achievement,
     Enrollment,
@@ -27,7 +29,7 @@ class PlayerSkillInline(admin.TabularInline):
 
 
 @admin.register(PlayerProfile)
-class PlayerProfileAdmin(admin.ModelAdmin):
+class PlayerProfileAdmin(SuperuserOnlyAdmin):
     list_display = ("id", "user", "level", "xp", "streak_days", "last_activity_date")
     list_filter = ("level",)
     search_fields = ("user__email", "user__username")
@@ -35,52 +37,52 @@ class PlayerProfileAdmin(admin.ModelAdmin):
 
 
 @admin.register(Skill)
-class SkillAdmin(admin.ModelAdmin):
+class SkillAdmin(SuperuserOnlyAdmin):
     list_display = ("id", "icon", "title", "code", "order")
     search_fields = ("title", "code")
 
 
 @admin.register(SectionSkill)
-class SectionSkillAdmin(admin.ModelAdmin):
+class SectionSkillAdmin(SuperuserOnlyAdmin):
     list_display = ("id", "section", "skill")
     list_filter = ("skill",)
 
 
 @admin.register(PlayerSkill)
-class PlayerSkillAdmin(admin.ModelAdmin):
+class PlayerSkillAdmin(SuperuserOnlyAdmin):
     list_display = ("id", "profile", "skill", "course", "earned_at")
     list_filter = ("skill",)
     search_fields = ("profile__user__email",)
 
 
 @admin.register(Achievement)
-class AchievementAdmin(admin.ModelAdmin):
+class AchievementAdmin(SuperuserOnlyAdmin):
     list_display = ("id", "icon", "title", "code", "xp_reward", "order")
     search_fields = ("title", "code")
 
 
 @admin.register(Enrollment)
-class EnrollmentAdmin(admin.ModelAdmin):
+class EnrollmentAdmin(SuperuserOnlyAdmin):
     list_display = ("id", "user", "course", "xp", "started_at", "completed_at")
     list_filter = ("course",)
     search_fields = ("user__email", "course__title")
 
 
 @admin.register(Purchase)
-class PurchaseAdmin(admin.ModelAdmin):
+class PurchaseAdmin(SuperuserOnlyAdmin):
     list_display = ("id", "user", "course", "amount", "created_at")
     list_filter = ("course",)
     search_fields = ("user__email", "course__title")
 
 
 @admin.register(MaterialProgress)
-class MaterialProgressAdmin(admin.ModelAdmin):
+class MaterialProgressAdmin(SuperuserOnlyAdmin):
     list_display = ("id", "user", "material", "completed_at")
     search_fields = ("user__email", "material__title")
 
 
 @admin.register(XPTransaction)
-class XPTransactionAdmin(admin.ModelAdmin):
+class XPTransactionAdmin(SuperuserOnlyAdmin):
     list_display = ("id", "profile", "amount", "reason", "created_at")
     list_filter = ("reason",)
     search_fields = ("profile__user__email",)
