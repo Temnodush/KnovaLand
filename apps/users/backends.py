@@ -23,9 +23,11 @@ class EmailOrUsernameBackend(ModelBackend):
             User().set_password(password)
             return None
         except User.MultipleObjectsReturned:
-            user = User.objects.filter(
-                Q(username__iexact=username) | Q(email__iexact=username)
-            ).order_by("id").first()
+            user = (
+                User.objects.filter(Q(username__iexact=username) | Q(email__iexact=username))
+                .order_by("id")
+                .first()
+            )
         if user.check_password(password) and self.user_can_authenticate(user):
             return user
         return None

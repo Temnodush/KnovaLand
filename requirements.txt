@@ -6,7 +6,7 @@ drf-spectacular==0.30.0
 django-filter==26.2
 python-dotenv==1.2.4
 Pillow==12.3.0
-psycopg2-binary==2.9.10
+psycopg2-binary==2.9.13
 gunicorn==23.0.0
 
 # dev / quality
@@ -14,6 +14,6 @@ pytest==9.1.1
 pytest-django==4.14.0
 factory-boy==3.3.3
 pytest-cov==7.1.0
-black==24.10.0
-isort==5.13.2
-flake8==7.1.1
+black==26.10.1
+isort==9.0.2
+flake8==7.4.1

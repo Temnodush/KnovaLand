@@ -7,8 +7,8 @@ from apps.users.permissions import IsOwnerOrAdminOrReadOnly, IsStudent
 
 from .models import SubmissionAnswer, Test, TestSubmission
 from .serializers import (
-    SubmitSerializer,
     SubmissionResultSerializer,
+    SubmitSerializer,
     TestStudentSerializer,
     TestTeacherSerializer,
 )
@@ -55,8 +55,7 @@ class TestViewSet(viewsets.ModelViewSet):
         payload.is_valid(raise_exception=True)
 
         answer_map = {
-            item["question"]: set(item["choices"])
-            for item in payload.validated_data["answers"]
+            item["question"]: set(item["choices"]) for item in payload.validated_data["answers"]
         }
 
         questions = list(test.questions.prefetch_related("choices"))
@@ -80,7 +79,9 @@ class TestViewSet(viewsets.ModelViewSet):
                 )
                 # Оставляем только варианты, относящиеся к этому вопросу.
                 valid_ids = {
-                    cid for cid in selected_ids if cid in set(question.choices.values_list("id", flat=True))
+                    cid
+                    for cid in selected_ids
+                    if cid in set(question.choices.values_list("id", flat=True))
                 }
                 answer.selected_choices.set(valid_ids)
 

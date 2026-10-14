@@ -28,7 +28,9 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     """Регистрация нового пользователя."""
 
-    password = serializers.CharField(write_only=True, min_length=8, style={"input_type": "password"})
+    password = serializers.CharField(
+        write_only=True, min_length=8, style={"input_type": "password"}
+    )
     password2 = serializers.CharField(write_only=True, style={"input_type": "password"})
 
     class Meta:
@@ -46,7 +48,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password2": "Пароли не совпадают."})
         # Студент/преподаватель при регистрации; админа назначает только админ.
         if attrs.get("role") == User.Role.ADMIN:
-            raise serializers.ValidationError({"role": "Роль администратора нельзя выбрать при регистрации."})
+            raise serializers.ValidationError(
+                {"role": "Роль администратора нельзя выбрать при регистрации."}
+            )
         return attrs
 
     def create(self, validated_data):

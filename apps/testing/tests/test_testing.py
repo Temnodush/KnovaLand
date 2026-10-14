@@ -17,7 +17,9 @@ def material(teacher_user):
 @pytest.fixture
 def test_obj(teacher_user, material):
     """Тест с одним вопросом и двумя вариантами (1 правильный)."""
-    test = Test.objects.create(material=material, title="Quiz", owner=teacher_user, passing_score=60)
+    test = Test.objects.create(
+        material=material, title="Quiz", owner=teacher_user, passing_score=60
+    )
     q = Question.objects.create(test=test, text="2+2?", order=1)
     Choice.objects.create(question=q, text="4", is_correct=True)
     Choice.objects.create(question=q, text="5", is_correct=False)

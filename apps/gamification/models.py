@@ -17,7 +17,9 @@ class PlayerProfile(models.Model):
     xp = models.PositiveIntegerField(default=0, verbose_name="Опыт")
     level = models.PositiveIntegerField(default=1, verbose_name="Уровень")
     streak_days = models.PositiveIntegerField(default=0, verbose_name="Серия дней")
-    last_activity_date = models.DateField(null=True, blank=True, verbose_name="Последняя активность")
+    last_activity_date = models.DateField(
+        null=True, blank=True, verbose_name="Последняя активность"
+    )
     character = models.CharField(max_length=50, blank=True, verbose_name="Персонаж")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

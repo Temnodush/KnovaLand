@@ -1,11 +1,12 @@
 """Сигналы: автоматическое начисление опыта и проверка достижений."""
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from apps.testing.models import TestSubmission
 
-from .models import Enrollment, MaterialProgress
 from . import services
+from .models import Enrollment, MaterialProgress
 
 
 @receiver(post_save, sender=TestSubmission)

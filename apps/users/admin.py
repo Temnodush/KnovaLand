@@ -11,4 +11,6 @@ class UserAdmin(DjangoUserAdmin):
     search_fields = ("email", "username", "first_name", "last_name")
     ordering = ("id",)
     fieldsets = DjangoUserAdmin.fieldsets + (("Роли и профиль", {"fields": ("role", "avatar")}),)
-    add_fieldsets = DjangoUserAdmin.add_fieldsets + (("Роли и профиль", {"fields": ("role", "email")}),)
+    add_fieldsets = DjangoUserAdmin.add_fieldsets + (
+        ("Роли и профиль", {"fields": ("role", "email")}),
+    )

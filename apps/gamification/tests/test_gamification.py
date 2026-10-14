@@ -7,7 +7,6 @@ from apps.gamification.models import (
     Enrollment,
     MaterialProgress,
     PlayerAchievement,
-    PlayerProfile,
 )
 from apps.materials.models import Material
 from apps.testing.models import Choice, Question, Test
@@ -105,9 +104,7 @@ def test_api_enroll(student_client, student_user, course):
 
 def test_api_complete_material(student_client, student_user, course):
     material = Material.objects.filter(section__course=course).first()
-    response = student_client.post(
-        "/api/game/progress/", {"material": material.id}, format="json"
-    )
+    response = student_client.post("/api/game/progress/", {"material": material.id}, format="json")
     assert response.status_code == 201
     assert MaterialProgress.objects.filter(user=student_user, material=material).exists()
 
@@ -116,7 +113,7 @@ def test_test_submission_awards_xp(student_user, teacher_user, course):
     material = Material.objects.filter(section__course=course).first()
     test = Test.objects.create(material=material, title="T", owner=teacher_user)
     question = Question.objects.create(test=test, text="?", order=1)
-    correct = Choice.objects.create(question=question, text="ok", is_correct=True)
+    Choice.objects.create(question=question, text="ok", is_correct=True)
     from apps.testing.models import TestSubmission
 
     TestSubmission.objects.create(

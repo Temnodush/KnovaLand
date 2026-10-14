@@ -2,6 +2,7 @@
 
 Запуск: python manage.py seed_demo
 """
+
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -22,9 +23,9 @@ class Command(BaseCommand):
         services.seed_achievements()
         self.stdout.write(self.style.SUCCESS("Достижения созданы."))
 
-        admin = self._user("admin", "admin@example.com", "admin12345", User.Role.ADMIN, True, True)
+        self._user("admin", "admin@example.com", "admin12345", User.Role.ADMIN, True, True)
         teacher = self._user("teacher", "teacher@example.com", "teacher12345", User.Role.TEACHER)
-        student = self._user("student", "student@example.com", "student12345", User.Role.STUDENT)
+        self._user("student", "student@example.com", "student12345", User.Role.STUDENT)
 
         self._course(
             teacher,
@@ -112,7 +113,9 @@ class Command(BaseCommand):
             owner=teacher,
             passing_score=60,
         )
-        q1 = Question.objects.create(test=test, text="Какая функция выводит текст на экран?", order=1)
+        q1 = Question.objects.create(
+            test=test, text="Какая функция выводит текст на экран?", order=1
+        )
         Choice.objects.create(question=q1, text="print()", is_correct=True)
         Choice.objects.create(question=q1, text="echo()", is_correct=False)
         Choice.objects.create(question=q1, text="console.log()", is_correct=False)

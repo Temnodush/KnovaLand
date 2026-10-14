@@ -59,9 +59,7 @@ def test_enroll_course(student_user, course):
 def test_complete_material_htmx(student_user, course):
     material = Material.objects.filter(section__course=course).first()
     client = _client(student_user)
-    response = client.post(
-        f"/materials/{material.id}/complete/", HTTP_HX_REQUEST="true"
-    )
+    response = client.post(f"/materials/{material.id}/complete/", HTTP_HX_REQUEST="true")
     assert response.status_code == 200
     assert "+10 XP" in response.content.decode()
     assert MaterialProgress.objects.filter(user=student_user, material=material).exists()

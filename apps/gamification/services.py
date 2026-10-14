@@ -1,4 +1,5 @@
 """Игровая логика: опыт, уровни, достижения, серии занятий."""
+
 from datetime import timedelta
 
 from django.utils import timezone
@@ -112,9 +113,7 @@ def seed_achievements():
 
 def check_achievements(profile):
     """Выдать профилю все достижения, условия которых выполнены."""
-    earned_codes = set(
-        profile.achievements.values_list("achievement__code", flat=True)
-    )
+    earned_codes = set(profile.achievements.values_list("achievement__code", flat=True))
     newly_earned = []
     bonus = 0
     for achievement in Achievement.objects.all():
