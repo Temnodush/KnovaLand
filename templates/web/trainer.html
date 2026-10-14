@@ -26,15 +26,22 @@
       <fieldset class="step {% if not forloop.first %}hidden{% endif %}" data-index="{{ forloop.counter0 }}">
         <div class="text-xs text-slate-500 mb-2">Вопрос {{ forloop.counter }} из {{ questions|length }}</div>
         <legend class="text-lg font-semibold mb-4">{{ question.text }}</legend>
-        <div class="space-y-2">
-          {% for choice in question.choices.all %}
-            <label class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 cursor-pointer hover:border-brand-500 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-600/10">
-              <input type="checkbox" name="q_{{ question.id }}" value="{{ choice.id }}"
-                     class="h-4 w-4 accent-indigo-500">
-              <span>{{ choice.text }}</span>
-            </label>
-          {% endfor %}
-        </div>
+        {% if question.kind == 'text' %}
+          <input type="text" name="q_{{ question.id }}_text" autocomplete="off"
+                 placeholder="Введите ответ..."
+                 class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 focus:border-brand-500 focus:outline-none">
+          <p class="mt-2 text-xs text-slate-500">✍️ Ответ вводится вручную</p>
+        {% else %}
+          <div class="space-y-2">
+            {% for choice in question.choices.all %}
+              <label class="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-3 cursor-pointer hover:border-brand-500 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-600/10">
+                <input type="checkbox" name="q_{{ question.id }}" value="{{ choice.id }}"
+                       class="h-4 w-4 accent-indigo-500">
+                <span>{{ choice.text }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        {% endif %}
       </fieldset>
     {% endfor %}
 

@@ -61,8 +61,13 @@ COURSE_STRUCTURE = [
                 ),
                 "questions": [
                     {
-                        "text": "Какая функция выводит текст на экран?",
+                        "text": "Какая функция выводит текст на экран? (выберите)",
                         "choices": [("print()", True), ("echo()", False), ("console.log()", False)],
+                    },
+                    {
+                        "text": "Напишите имя функции вывода текста без скобок (ручной ввод)",
+                        "kind": "text",
+                        "answer_text": "print",
                     },
                     {
                         "text": "Как в Python оформляют комментарий?",
@@ -100,8 +105,13 @@ COURSE_STRUCTURE = [
                 ),
                 "questions": [
                     {
-                        "text": "Какой тип у значения 3.14?",
+                        "text": "Какой тип у значения 3.14? (выберите)",
                         "choices": [("float", True), ("int", False), ("str", False)],
+                    },
+                    {
+                        "text": "Напишите название типа для дробного числа (ручной ввод)",
+                        "kind": "text",
+                        "answer_text": "float",
                     },
                     {
                         "text": "Как хранить логическое значение?",
@@ -351,7 +361,11 @@ class Command(BaseCommand):
         ).delete()
 
         course = Course.objects.create(
-            title=COURSE_TITLE, description=COURSE_DESC, owner=teacher, is_published=True
+            title=COURSE_TITLE,
+            description=COURSE_DESC,
+            owner=teacher,
+            is_published=True,
+            cover="card_python.png",
         )
         for section_data in COURSE_STRUCTURE:
             self._create_section(course, teacher, section_data, skills)
@@ -399,8 +413,14 @@ class Command(BaseCommand):
             passing_score=60,
         )
         for order, q in enumerate(questions, start=1):
-            question = Question.objects.create(test=test, text=q["text"], order=order)
-            for choice_text, is_correct in q["choices"]:
+            question = Question.objects.create(
+                test=test,
+                text=q["text"],
+                kind=q.get("kind", Question.Kind.CHOICE),
+                answer_text=q.get("answer_text", ""),
+                order=order,
+            )
+            for choice_text, is_correct in q.get("choices", []):
                 Choice.objects.create(question=question, text=choice_text, is_correct=is_correct)
 
     def _user(self, username, email, password, role, is_staff=False, is_superuser=False):

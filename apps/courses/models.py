@@ -14,6 +14,12 @@ class Course(models.Model):
         verbose_name="Владелец",
     )
     is_published = models.BooleanField(default=True, verbose_name="Опубликован")
+    cover = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Обложка",
+        help_text="Имя файла в static/ (например, card_python.png)",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

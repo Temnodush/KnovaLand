@@ -18,7 +18,7 @@ class QuestionStudentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ("id", "text", "order", "choices")
+        fields = ("id", "text", "kind", "order", "choices")
 
 
 class TestStudentSerializer(serializers.ModelSerializer):
@@ -39,18 +39,32 @@ class ChoiceTeacherSerializer(serializers.ModelSerializer):
 
 
 class QuestionTeacherSerializer(serializers.ModelSerializer):
-    choices = ChoiceTeacherSerializer(many=True)
+    choices = ChoiceTeacherSerializer(many=True, required=False)
 
     class Meta:
         model = Question
-        fields = ("id", "text", "order", "choices")
+        fields = ("id", "text", "kind", "answer_text", "order", "choices")
 
-    def validate_choices(self, value):
-        if not value:
-            raise serializers.ValidationError("У вопроса должен быть хотя бы один вариант ответа.")
-        if not any(c.get("is_correct") for c in value):
-            raise serializers.ValidationError("Отметьте хотя бы один правильный вариант ответа.")
-        return value
+    def validate(self, attrs):
+        kind = attrs.get("kind", getattr(self.instance, "kind", Question.Kind.CHOICE))
+        if kind == Question.Kind.TEXT:
+            answer_text = attrs.get("answer_text", getattr(self.instance, "answer_text", ""))
+            if not (answer_text or "").strip():
+                raise serializers.ValidationError(
+                    {"answer_text": "Укажите правильный ответ для вопроса с ручным вводом."}
+                )
+        else:
+            choices = attrs.get("choices")
+            if choices is not None:
+                if not choices:
+                    raise serializers.ValidationError(
+                        {"choices": "У вопроса должен быть хотя бы один вариант ответа."}
+                    )
+                if not any(c.get("is_correct") for c in choices):
+                    raise serializers.ValidationError(
+                        {"choices": "Отметьте хотя бы один правильный вариант ответа."}
+                    )
+        return attrs
 
 
 class TestTeacherSerializer(serializers.ModelSerializer):
@@ -110,7 +124,10 @@ class TestTeacherSerializer(serializers.ModelSerializer):
 # ---------------------------------------------------------------------------
 class SubmitAnswerSerializer(serializers.Serializer):
     question = serializers.IntegerField()
-    choices = serializers.ListField(child=serializers.IntegerField(), allow_empty=True)
+    choices = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=True, required=False, default=list
+    )
+    text = serializers.CharField(required=False, allow_blank=True, default="")
 
 
 class SubmitSerializer(serializers.Serializer):
@@ -133,4 +150,11 @@ class SubmissionAnswerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SubmissionAnswer
-        fields = ("id", "question", "question_text", "selected_choices", "is_correct")
+        fields = (
+            "id",
+            "question",
+            "question_text",
+            "selected_choices",
+            "text_answer",
+            "is_correct",
+        )

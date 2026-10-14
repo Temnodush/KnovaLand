@@ -1,7 +1,14 @@
+import re
+
 from django.conf import settings
 from django.db import models
 
 from apps.materials.models import Material
+
+
+def normalize_answer(value):
+    """Привести текстовый ответ к сравнимому виду: регистр, пробелы, край пробелов."""
+    return re.sub(r"\s+", " ", (value or "").strip().lower())
 
 
 class Test(models.Model):
@@ -45,6 +52,10 @@ class Test(models.Model):
 
 
 class Question(models.Model):
+    class Kind(models.TextChoices):
+        CHOICE = "choice", "Выбор ответа"
+        TEXT = "text", "Ручной ввод"
+
     test = models.ForeignKey(
         Test,
         on_delete=models.CASCADE,
@@ -52,6 +63,18 @@ class Question(models.Model):
         verbose_name="Тест",
     )
     text = models.TextField(verbose_name="Вопрос")
+    kind = models.CharField(
+        max_length=10,
+        choices=Kind.choices,
+        default=Kind.CHOICE,
+        verbose_name="Тип вопроса",
+    )
+    answer_text = models.CharField(
+        max_length=500,
+        blank=True,
+        verbose_name="Правильный ответ (для ручного ввода)",
+        help_text="Несколько допустимых вариантов разделяйте символом |",
+    )
     order = models.PositiveIntegerField(default=0, verbose_name="Порядок")
 
     class Meta:
@@ -64,6 +87,13 @@ class Question(models.Model):
 
     def correct_choice_ids(self):
         return list(self.choices.filter(is_correct=True).values_list("id", flat=True))
+
+    def correct_text_answers(self):
+        """Список допустимых ответов (нормализованных) для вопроса с вводом."""
+        return [normalize_answer(part) for part in self.answer_text.split("|") if part.strip()]
+
+    def check_text(self, value):
+        return normalize_answer(value) in self.correct_text_answers()
 
 
 class Choice(models.Model):
@@ -124,6 +154,9 @@ class SubmissionAnswer(models.Model):
     )
     question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="Вопрос")
     selected_choices = models.ManyToManyField(Choice, verbose_name="Выбранные ответы")
+    text_answer = models.CharField(
+        max_length=500, blank=True, verbose_name="Введённый ответ (ручной ввод)"
+    )
     is_correct = models.BooleanField(default=False, verbose_name="Ответ верный")
 
     class Meta:

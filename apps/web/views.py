@@ -234,10 +234,18 @@ def trainer_submit(request, pk):
 
     answers = []
     for question in test.questions.all():
-        chosen = request.POST.getlist(f"q_{question.id}")
-        answers.append(
-            {"question": question.id, "choices": [int(c) for c in chosen if c.isdigit()]}
-        )
+        if question.kind == question.Kind.TEXT:
+            answers.append(
+                {
+                    "question": question.id,
+                    "text": request.POST.get(f"q_{question.id}_text", ""),
+                }
+            )
+        else:
+            chosen = request.POST.getlist(f"q_{question.id}")
+            answers.append(
+                {"question": question.id, "choices": [int(c) for c in chosen if c.isdigit()]}
+            )
 
     skills_before = set(_profile(request.user).skills.values_list("skill_id", flat=True))
     result = grade_test(request.user, test, answers)
