@@ -113,3 +113,15 @@ def test_teacher_cannot_open_foreign_course(teacher_staff, other_teacher_staff):
 
 def test_teacher_cannot_see_users_module(teacher_staff):
     assert _client(teacher_staff).get(reverse("admin:users_user_changelist")).status_code == 403
+
+
+def test_admin_login_page_anonymous_does_not_crash(client):
+    # Регресс: на логине пользователь анонимный (нет свойства is_teacher).
+    response = client.get(reverse("admin:login"))
+    assert response.status_code == 200
+
+
+def test_admin_index_anonymous_redirects_to_login(client):
+    response = client.get(reverse("admin:index"))
+    assert response.status_code == 302
+    assert "/admin/login/" in response.url
