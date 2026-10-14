@@ -20,6 +20,7 @@ class Course(models.Model):
         verbose_name="Обложка",
         help_text="Имя файла в static/ (например, card_python.png)",
     )
+    icon = models.CharField(max_length=16, default="📘", verbose_name="Иконка (emoji)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

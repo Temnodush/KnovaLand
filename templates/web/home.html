@@ -38,7 +38,7 @@
             <img src="{% static course.cover %}" alt="{{ course.title }}"
                  class="h-40 w-full object-cover">
           {% else %}
-            <div class="h-40 w-full grid place-items-center bg-slate-800/40 text-5xl">📘</div>
+            <div class="h-40 w-full grid place-items-center bg-slate-800/40 text-6xl">{{ course.icon }}</div>
           {% endif %}
           <div class="p-5">
             <h3 class="font-semibold text-lg">{{ course.title }}</h3>
