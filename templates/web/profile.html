@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Профиль — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="grid lg:grid-cols-3 gap-6">
+  <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+    <div class="h-20 w-20 rounded-full bg-brand-600/30 grid place-items-center text-4xl mx-auto">🧙</div>
+    <div class="mt-4 text-center">
+      <div class="font-bold text-xl">{{ user.username }}</div>
+      <div class="text-slate-400 text-sm">{{ user.email }}</div>
+    </div>
+    <div class="mt-6 grid grid-cols-3 text-center">
+      <div>
+        <div class="text-2xl font-bold text-brand-300">{{ profile.level }}</div>
+        <div class="text-xs text-slate-500">Уровень</div>
+      </div>
+      <div>
+        <div class="text-2xl font-bold text-brand-300">{{ profile.xp }}</div>
+        <div class="text-xs text-slate-500">Опыт</div>
+      </div>
+      <div>
+        <div class="text-2xl font-bold text-brand-300">{{ profile.streak_days }}</div>
+        <div class="text-xs text-slate-500">Серия</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lg:col-span-2 space-y-6">
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <h3 class="font-semibold mb-4">Полученные достижения</h3>
+      {% if earned %}
+        <div class="grid sm:grid-cols-2 gap-3">
+          {% for pa in earned %}
+            <div class="flex items-center gap-3 rounded-xl bg-slate-950/50 border border-slate-800 p-3">
+              <span class="text-2xl">{{ pa.achievement.icon }}</span>
+              <div>
+                <div class="font-medium">{{ pa.achievement.title }}</div>
+                <div class="text-xs text-slate-500">{{ pa.achievement.description }}</div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-slate-500 text-sm">Достижений пока нет — начните обучение!</p>
+      {% endif %}
+    </div>
+
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <h3 class="font-semibold mb-4">Последние начисления опыта</h3>
+      {% if transactions %}
+        <ul class="divide-y divide-slate-800 text-sm">
+          {% for tx in transactions %}
+            <li class="flex justify-between py-2">
+              <span class="text-slate-400">{{ tx.reason|default:"активность" }}</span>
+              <span class="font-semibold text-emerald-400">+{{ tx.amount }} XP</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-slate-500 text-sm">Пока нет начислений.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

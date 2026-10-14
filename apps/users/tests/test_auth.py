@@ -90,3 +90,21 @@ def test_me_endpoint(student_client, student_user):
 def test_users_list_admin_only(admin_client, student_client, student_user):
     assert admin_client.get("/api/users/").status_code == 200
     assert student_client.get("/api/users/").status_code == 403
+
+
+def test_session_login_by_username(student_user):
+    from django.test import Client
+
+    assert Client().login(username="student", password="pass12345") is True
+
+
+def test_session_login_by_email(student_user):
+    from django.test import Client
+
+    assert Client().login(username=student_user.email, password="pass12345") is True
+
+
+def test_session_login_wrong_password(student_user):
+    from django.test import Client
+
+    assert Client().login(username="student", password="nope") is False

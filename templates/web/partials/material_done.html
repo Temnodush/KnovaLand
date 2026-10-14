@@ -1,0 +1,11 @@
+{# Возвращает всю строку материала в завершённом состоянии (HTMX outerHTML) #}
+<div class="flex items-center justify-between gap-4 rounded-xl bg-slate-950/50 border border-emerald-800 px-4 py-3">
+  <div class="flex items-center gap-3 min-w-0">
+    <span class="text-xl">✅</span>
+    <div class="min-w-0">
+      <div class="truncate font-medium">{{ material.title }}</div>
+      <div class="text-xs text-emerald-400">+10 XP · Ур. {{ profile.level }} · {{ profile.xp }} XP всего</div>
+    </div>
+  </div>
+  <span class="text-xs text-emerald-400">Пройдено</span>
+</div>

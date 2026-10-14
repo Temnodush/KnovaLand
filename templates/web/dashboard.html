@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Кабинет — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="grid lg:grid-cols-3 gap-6">
+  <!-- Профиль / опыт -->
+  <div class="lg:col-span-1 space-y-6">
+    <div class="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-900/40 p-6">
+      <div class="flex items-center gap-4">
+        <div class="h-16 w-16 rounded-full bg-brand-600/30 grid place-items-center text-3xl">🧙</div>
+        <div>
+          <div class="font-semibold text-lg">{{ user.username }}</div>
+          <div class="text-sm text-slate-400">Уровень {{ profile.level }}</div>
+        </div>
+      </div>
+
+      <div class="mt-5">
+        <div class="flex justify-between text-xs text-slate-400 mb-1">
+          <span>{{ profile.xp_in_level }} / {{ profile.xp_in_level|add:profile.xp_to_next_level }} XP до ур. {{ profile.level|add:1 }}</span>
+          <span>{{ profile.level_progress_percent }}%</span>
+        </div>
+        <div class="h-3 rounded-full bg-slate-800 overflow-hidden">
+          <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500"
+               style="width: {{ profile.level_progress_percent }}%"></div>
+        </div>
+        <div class="mt-2 flex justify-between text-xs text-slate-500">
+          <span>Всего: {{ profile.xp }} XP</span>
+          <span>🔥 Серия: {{ profile.streak_days }} дн.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <h3 class="font-semibold mb-3">Достижения</h3>
+      <div class="grid grid-cols-4 gap-3">
+        {% for ach in achievements %}
+          <div class="text-center" title="{{ ach.title }} — {{ ach.description }}">
+            <div class="h-12 w-12 mx-auto rounded-xl grid place-items-center text-2xl
+                        {% if ach.id in earned_ids %}bg-brand-600/30{% else %}bg-slate-800 opacity-40{% endif %}">
+              {{ ach.icon }}
+            </div>
+            <div class="mt-1 text-[10px] text-slate-500 leading-tight">{{ ach.title }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Мои курсы -->
+  <div class="lg:col-span-2 space-y-6">
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <h3 class="font-semibold mb-4">Мои курсы</h3>
+      {% if enrolled_courses %}
+        <div class="space-y-4">
+          {% for item in enrolled_courses %}
+            <a href="{% url 'web:course-detail' item.course.id %}" class="block group">
+              <div class="flex justify-between items-center">
+                <span class="font-medium group-hover:text-brand-300">{{ item.course.title }}</span>
+                <span class="text-xs {% if item.completed %}text-emerald-400{% else %}text-slate-400{% endif %}">
+                  {% if item.completed %}✔ Завершён{% else %}{{ item.percent }}%{% endif %}
+                </span>
+              </div>
+              <div class="mt-2 h-2 rounded-full bg-slate-800 overflow-hidden">
+                <div class="h-full rounded-full {% if item.completed %}bg-emerald-500{% else %}bg-brand-500{% endif %}"
+                     style="width: {{ item.percent }}%"></div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-slate-500 text-sm">Вы ещё не записались ни на один курс.</p>
+      {% endif %}
+    </div>
+
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <h3 class="font-semibold mb-4">Рекомендуем начать</h3>
+      {% if available_courses %}
+        <div class="grid sm:grid-cols-2 gap-4">
+          {% for course in available_courses %}
+            <a href="{% url 'web:course-detail' course.id %}"
+               class="rounded-xl border border-slate-800 bg-slate-950/50 p-4 hover:border-brand-500">
+              <div class="text-2xl">📗</div>
+              <div class="mt-2 font-medium">{{ course.title }}</div>
+              <div class="text-xs text-slate-500 mt-1">{{ course.owner.username }}</div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-slate-500 text-sm">Новых курсов пока нет — вы записаны на всё доступное.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

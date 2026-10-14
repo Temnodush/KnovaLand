@@ -1,0 +1,22 @@
+from django.contrib.auth import views as auth_views
+from django.urls import path
+
+from . import views
+
+app_name = "web"
+
+urlpatterns = [
+    path("", views.home, name="home"),
+    path("dashboard/", views.dashboard, name="dashboard"),
+    path("courses/<int:pk>/", views.course_detail, name="course-detail"),
+    path("courses/<int:pk>/enroll/", views.enroll_course, name="enroll"),
+    path("materials/<int:pk>/complete/", views.complete_material, name="complete-material"),
+    path("leaderboard/", views.leaderboard, name="leaderboard"),
+    path("profile/", views.profile_view, name="profile"),
+    path(
+        "login/",
+        auth_views.LoginView.as_view(template_name="registration/login.html"),
+        name="login",
+    ),
+    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+]

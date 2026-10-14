@@ -1,0 +1,21 @@
+/* Erudite LMS — собственные стили. Основная вёрстка — Tailwind (CDN). */
+:root {
+  --brand: #6366f1;
+}
+
+[x-cloak] { display: none !important; }
+
+/* Плавное появление HTMX-фрагментов */
+.htmx-swapping { opacity: 0; transition: opacity .2s ease; }
+.htmx-settling { opacity: 0; }
+.htmx-request .spin { display: inline-block; }
+
+.spin {
+  display: none;
+  width: 1em; height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

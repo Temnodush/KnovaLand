@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     "apps.courses",
     "apps.materials",
     "apps.testing",
+    "apps.gamification",
+    "apps.web",
 ]
 
 MIDDLEWARE = [
@@ -49,7 +51,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -57,6 +59,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.web.context_processors.site",
             ],
         },
     },
@@ -87,6 +90,10 @@ else:
 
 AUTH_USER_MODEL = "users.User"
 
+AUTHENTICATION_BACKENDS = [
+    "apps.users.backends.EmailOrUsernameBackend",
+]
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -101,9 +108,16 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Web UI (server-rendered)
+SITE_NAME = os.getenv("SITE_NAME", "Erudite")
+LOGIN_URL = "web:login"
+LOGIN_REDIRECT_URL = "web:dashboard"
+LOGOUT_REDIRECT_URL = "web:home"
 
 # DRF
 REST_FRAMEWORK = {
