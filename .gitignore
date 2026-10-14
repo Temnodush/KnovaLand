@@ -51,3 +51,7 @@ acl-recovery/
 
 # generated API schema
 schema.yml
+
+# материалы для защиты (презентация, бизнес-блок, Q&A) — локально, не в репозитории
+docs/
+tools/
