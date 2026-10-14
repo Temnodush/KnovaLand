@@ -1,17 +1,17 @@
-from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.users.permissions import IsOwnerOrAdminOrReadOnly, IsStudent
 
-from .models import SubmissionAnswer, Test, TestSubmission
+from .models import Test, TestSubmission
 from .serializers import (
     SubmissionResultSerializer,
     SubmitSerializer,
     TestStudentSerializer,
     TestTeacherSerializer,
 )
+from .services import grade_test
 
 
 class TestViewSet(viewsets.ModelViewSet):
@@ -54,63 +54,17 @@ class TestViewSet(viewsets.ModelViewSet):
         payload = SubmitSerializer(data=request.data)
         payload.is_valid(raise_exception=True)
 
-        answer_map = {
-            item["question"]: set(item["choices"]) for item in payload.validated_data["answers"]
-        }
-
-        questions = list(test.questions.prefetch_related("choices"))
-        score = 0
-        details = []
-
-        with transaction.atomic():
-            submission = TestSubmission.objects.create(
-                test=test, user=request.user, total=len(questions)
-            )
-            for question in questions:
-                correct_ids = set(question.correct_choice_ids())
-                selected_ids = answer_map.get(question.id, set())
-                # Ответ верен, только если выбраны все правильные и нет лишних.
-                is_correct = bool(correct_ids) and selected_ids == correct_ids
-                if is_correct:
-                    score += 1
-
-                answer = SubmissionAnswer.objects.create(
-                    submission=submission, question=question, is_correct=is_correct
-                )
-                # Оставляем только варианты, относящиеся к этому вопросу.
-                valid_ids = {
-                    cid
-                    for cid in selected_ids
-                    if cid in set(question.choices.values_list("id", flat=True))
-                }
-                answer.selected_choices.set(valid_ids)
-
-                details.append(
-                    {
-                        "question": question.id,
-                        "is_correct": is_correct,
-                        "selected_choices": sorted(valid_ids),
-                        "correct_choices": sorted(correct_ids),
-                    }
-                )
-
-            total = len(questions)
-            percentage = round(score / total * 100, 2) if total else 0.0
-            submission.score = score
-            submission.percentage = percentage
-            submission.is_passed = percentage >= test.passing_score
-            submission.save()
-
+        result = grade_test(request.user, test, payload.validated_data["answers"])
         return Response(
             {
-                "submission_id": submission.id,
-                "test": test.id,
-                "score": score,
-                "total": total,
-                "percentage": percentage,
-                "is_passed": submission.is_passed,
-                "passing_score": test.passing_score,
-                "details": details,
+                "submission_id": result["submission_id"],
+                "test": result["test"],
+                "score": result["score"],
+                "total": result["total"],
+                "percentage": result["percentage"],
+                "is_passed": result["is_passed"],
+                "passing_score": result["passing_score"],
+                "details": result["details"],
             },
             status=status.HTTP_201_CREATED,
         )

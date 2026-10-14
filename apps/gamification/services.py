@@ -1,4 +1,4 @@
-"""Игровая логика: опыт, уровни, достижения, серии занятий."""
+"""Игровая логика: опыт, уровни, достижения, серии занятий, навыки."""
 
 from datetime import timedelta
 
@@ -12,11 +12,19 @@ from .models import (
     MaterialProgress,
     PlayerAchievement,
     PlayerProfile,
+    PlayerSkill,
+    SectionSkill,
     XPTransaction,
 )
 
-# Пороговое значение опыта на «шаг» уровня.
+# Пороговое значение опыта на «шаг» уровня (глобальный профиль).
 LEVEL_BASE = 100
+
+# Опыт курса за один уровень (уровневая система внутри курса).
+COURSE_XP_PER_LEVEL = 100
+XP_PER_LESSON = 100
+XP_PER_TRAINER_PASS = 50
+XP_PER_SKILL = 75
 
 
 def xp_required_for_level(level):
@@ -36,6 +44,11 @@ def level_for_xp(xp):
     while xp_required_for_level(level + 1) <= xp:
         level += 1
     return level
+
+
+def course_level_for_xp(xp):
+    """Уровень внутри курса: каждые COURSE_XP_PER_LEVEL опыта — новый уровень."""
+    return xp // COURSE_XP_PER_LEVEL + 1
 
 
 def get_profile(user):
@@ -133,12 +146,96 @@ def check_achievements(profile):
 
 
 # --- Прогрессия ---------------------------------------------------------------
+def lessons_of_course(course):
+    """Упорядоченный список объектов уроков курса (по разделам и порядку)."""
+    sections = list(course.sections.order_by("order", "id"))
+    lessons = []
+    for section in sections:
+        lessons.extend(section.materials.order_by("order", "id"))
+    return lessons
+
+
+def completed_lesson_ids(user, course):
+    return set(
+        MaterialProgress.objects.filter(user=user, material__section__course=course).values_list(
+            "material_id", flat=True
+        )
+    )
+
+
+def lesson_is_unlocked(user, material):
+    """Урок открыт, если он первый в курсе или предыдущий урок уже пройден."""
+    course = material.section.course
+    lessons = lessons_of_course(course)
+    ids = [lesson.id for lesson in lessons]
+    if material.id not in ids:
+        return False
+    index = ids.index(material.id)
+    if index == 0:
+        return True
+    previous_id = ids[index - 1]
+    return MaterialProgress.objects.filter(user=user, material_id=previous_id).exists()
+
+
+def next_lesson(user, course):
+    """Первый доступный (открытый и непройденный) урок курса."""
+    done = completed_lesson_ids(user, course)
+    for lesson in lessons_of_course(course):
+        if lesson.id not in done and lesson_is_unlocked(user, lesson):
+            return lesson
+    return None
+
+
+def award_course_xp(user, course, amount, reason=""):
+    """Начислить опыт внутри курса (для уровневой системы курса)."""
+    if amount <= 0:
+        return None
+    enrollment, _ = Enrollment.objects.get_or_create(user=user, course=course)
+    enrollment.xp += amount
+    enrollment.save(update_fields=["xp"])
+    return enrollment
+
+
+def section_is_complete(user, section):
+    """Все ли уроки раздела пройдены."""
+    lesson_ids = list(section.materials.values_list("id", flat=True))
+    if not lesson_ids:
+        return False
+    done = MaterialProgress.objects.filter(user=user, material_id__in=lesson_ids).count()
+    return done >= len(lesson_ids)
+
+
+def check_skills(user, course=None):
+    """Выдать навыки за полностью пройденные группы уроков. Возвращает новые навыки."""
+    profile = get_profile(user)
+    earned = set(profile.skills.values_list("skill_id", flat=True))
+    newly = []
+    links = SectionSkill.objects.select_related("skill", "section__course")
+    for link in links:
+        if link.skill_id in earned:
+            continue
+        if course is not None and link.section.course_id != course.id:
+            continue
+        if section_is_complete(user, link.section):
+            PlayerSkill.objects.create(
+                profile=profile, skill=link.skill, course=link.section.course
+            )
+            earned.add(link.skill_id)
+            newly.append(link.skill)
+    if newly:
+        award_xp(profile, XP_PER_SKILL * len(newly), reason="skill")
+    return newly
+
+
 def mark_material_complete(user, material):
-    """Отметить материал как пройденный. Возвращает (record, created)."""
+    """Отметить урок пройденным: глобальный и курсовой опыт, проверка навыков."""
     record, created = MaterialProgress.objects.get_or_create(user=user, material=material)
     if created:
-        profile = get_profile(user)
-        award_xp(profile, 10, reason=f"material:{material.id}")
+        course = material.section.course
+        award_xp(get_profile(user), 10, reason=f"lesson:{material.id}")
+        award_course_xp(user, course, XP_PER_LESSON, reason=f"lesson:{material.id}")
+        check_skills(user, course)
+        refresh_course_completion(user, course)
     return record, created
 
 

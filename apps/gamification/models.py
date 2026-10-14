@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from apps.courses.models import Course
+from apps.courses.models import Course, Section
 from apps.materials.models import Material
 
 
@@ -101,12 +101,13 @@ class PlayerAchievement(models.Model):
 
 
 class Enrollment(models.Model):
-    """Запись студента на курс (зачисление)."""
+    """Запись студента на курс (зачисление) с собственным опытом курса."""
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="enrollments"
     )
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="enrollments")
+    xp = models.PositiveIntegerField(default=0, verbose_name="Опыт курса")
     started_at = models.DateTimeField(auto_now_add=True, verbose_name="Начат")
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Завершён")
 
@@ -122,6 +123,24 @@ class Enrollment(models.Model):
     @property
     def is_completed(self):
         return self.completed_at is not None
+
+    @property
+    def course_level(self):
+        from .services import course_level_for_xp
+
+        return course_level_for_xp(self.xp)
+
+    @property
+    def course_xp_in_level(self):
+        from .services import COURSE_XP_PER_LEVEL, course_level_for_xp
+
+        return self.xp - (course_level_for_xp(self.xp) - 1) * COURSE_XP_PER_LEVEL
+
+    @property
+    def course_level_progress_percent(self):
+        from .services import COURSE_XP_PER_LEVEL
+
+        return round(self.course_xp_in_level / COURSE_XP_PER_LEVEL * 100, 1)
 
 
 class MaterialProgress(models.Model):
@@ -162,3 +181,72 @@ class XPTransaction(models.Model):
 
     def __str__(self):
         return f"{self.profile.user}: +{self.amount} ({self.reason})"
+
+
+class Skill(models.Model):
+    """Справочник навыков (выдаются за прохождение групп уроков)."""
+
+    code = models.SlugField(max_length=64, unique=True, verbose_name="Код")
+    title = models.CharField(max_length=120, verbose_name="Название")
+    description = models.CharField(max_length=255, blank=True, verbose_name="Описание")
+    icon = models.CharField(max_length=16, default="🧠", verbose_name="Иконка (emoji)")
+    order = models.PositiveIntegerField(default=0, verbose_name="Порядок")
+
+    class Meta:
+        verbose_name = "Навык"
+        verbose_name_plural = "Навыки"
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return self.title
+
+
+class SectionSkill(models.Model):
+    """Какой навык выдаётся за прохождение группы уроков (раздела)."""
+
+    section = models.OneToOneField(
+        Section,
+        on_delete=models.CASCADE,
+        related_name="skill_link",
+        verbose_name="Раздел",
+    )
+    skill = models.ForeignKey(
+        Skill, on_delete=models.CASCADE, related_name="sections", verbose_name="Навык"
+    )
+
+    class Meta:
+        verbose_name = "Навык раздела"
+        verbose_name_plural = "Навыки разделов"
+
+    def __str__(self):
+        return f"{self.section} → {self.skill}"
+
+
+class PlayerSkill(models.Model):
+    """Полученный пользователем навык."""
+
+    profile = models.ForeignKey(
+        PlayerProfile,
+        on_delete=models.CASCADE,
+        related_name="skills",
+        verbose_name="Профиль",
+    )
+    skill = models.ForeignKey(Skill, on_delete=models.CASCADE, verbose_name="Навык")
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="awarded_skills",
+        verbose_name="Курс",
+    )
+    earned_at = models.DateTimeField(auto_now_add=True, verbose_name="Получен")
+
+    class Meta:
+        verbose_name = "Навык игрока"
+        verbose_name_plural = "Навыки игроков"
+        unique_together = ("profile", "skill")
+        ordering = ["skill__order", "id"]
+
+    def __str__(self):
+        return f"{self.profile.user} — {self.skill.title}"

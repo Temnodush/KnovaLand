@@ -8,8 +8,15 @@ from django.views.decorators.http import require_POST
 
 from apps.courses.models import Course
 from apps.gamification import services
-from apps.gamification.models import Achievement, Enrollment, MaterialProgress, PlayerAchievement
+from apps.gamification.models import (
+    Achievement,
+    Enrollment,
+    MaterialProgress,
+    PlayerAchievement,
+    Skill,
+)
 from apps.materials.models import Material
+from apps.testing.services import grade_test
 from apps.users.emails import try_send_verification_email
 from apps.users.forms import WebRegisterForm
 from apps.users.tokens import read_email_verification_token
@@ -99,6 +106,7 @@ def dashboard(request):
         enrolled_courses.append(
             {
                 "course": enrollment.course,
+                "enrollment": enrollment,
                 "percent": services.course_progress_percent(request.user, enrollment.course),
                 "completed": enrollment.is_completed,
             }
@@ -108,6 +116,7 @@ def dashboard(request):
         PlayerAchievement.objects.filter(profile=profile).values_list("achievement_id", flat=True)
     )
     achievements = Achievement.objects.all()
+    skills = profile.skills.select_related("skill").all()
 
     available = (
         Course.objects.filter(is_published=True)
@@ -120,45 +129,135 @@ def dashboard(request):
         "enrolled_courses": enrolled_courses,
         "achievements": achievements,
         "earned_ids": earned_ids,
+        "skills": skills,
         "available_courses": available,
     }
     return render(request, "web/dashboard.html", context)
 
 
-@login_required
-def course_detail(request, pk):
-    """Карта курса: разделы и материалы с прогрессом."""
-    course = get_object_or_404(Course, pk=pk)
-    is_enrolled = Enrollment.objects.filter(user=request.user, course=course).exists()
-    completed_ids = set(
-        MaterialProgress.objects.filter(
-            user=request.user, material__section__course=course
-        ).values_list("material_id", flat=True)
-    )
+def _course_structure(user, course):
+    """Построить структуру курса: разделы → уроки с состоянием открытия/прохождения."""
+    completed = services.completed_lesson_ids(user, course)
     sections = []
-    total_materials = 0
-    for section in course.sections.prefetch_related("materials").all():
-        materials = []
-        for material in section.materials.all():
-            total_materials += 1
-            materials.append(
+    for section in course.sections.order_by("order", "id").prefetch_related("materials"):
+        lessons = []
+        for lesson in section.materials.order_by("order", "id"):
+            lessons.append(
                 {
-                    "obj": material,
-                    "completed": material.id in completed_ids,
-                    "tests_count": material.tests.count(),
+                    "obj": lesson,
+                    "completed": lesson.id in completed,
+                    "unlocked": services.lesson_is_unlocked(user, lesson),
+                    "tests_count": lesson.tests.count(),
                 }
             )
-        sections.append({"obj": section, "materials": materials})
+        skill_link = getattr(section, "skill_link", None)
+        sections.append(
+            {
+                "obj": section,
+                "lessons": lessons,
+                "skill": skill_link.skill if skill_link else None,
+                "complete": services.section_is_complete(user, section),
+            }
+        )
+    return sections
 
-    percent = services.course_progress_percent(request.user, course) if total_materials else 0
+
+@login_required
+def course_detail(request, pk):
+    """Карта курса: разделы-группы и уроки с прогрессом и замками."""
+    course = get_object_or_404(Course, pk=pk)
+    enrollment = Enrollment.objects.filter(user=request.user, course=course).first()
+    sections = _course_structure(request.user, course)
+    total_lessons = sum(len(s["lessons"]) for s in sections)
+    percent = services.course_progress_percent(request.user, course) if total_lessons else 0
     context = {
         "course": course,
         "sections": sections,
-        "is_enrolled": is_enrolled,
+        "enrollment": enrollment,
+        "is_enrolled": enrollment is not None,
         "percent": percent,
-        "total_materials": total_materials,
+        "total_lessons": total_lessons,
+        "next_lesson": services.next_lesson(request.user, course),
     }
     return render(request, "web/course_detail.html", context)
+
+
+@login_required
+def lesson_detail(request, pk):
+    """Страница урока: материал, прогресс и тренажёр в конце."""
+    lesson = get_object_or_404(Material, pk=pk)
+    course = lesson.section.course
+    if not Enrollment.objects.filter(user=request.user, course=course).exists():
+        messages.info(request, "Сначала запишитесь на курс.")
+        return redirect("web:course-detail", pk=course.id)
+    if not services.lesson_is_unlocked(request.user, lesson):
+        messages.warning(request, "Этот урок ещё закрыт — пройдите предыдущие.")
+        return redirect("web:course-detail", pk=course.id)
+
+    completed = MaterialProgress.objects.filter(user=request.user, material=lesson).exists()
+    test = lesson.tests.first()
+    context = {
+        "lesson": lesson,
+        "course": course,
+        "section": lesson.section,
+        "completed": completed,
+        "test": test,
+        "next_lesson": services.next_lesson(request.user, course),
+    }
+    return render(request, "web/lesson_detail.html", context)
+
+
+@login_required
+def trainer(request, pk):
+    """RPG-тренажёр по уроку."""
+    lesson = get_object_or_404(Material, pk=pk)
+    course = lesson.section.course
+    test = lesson.tests.first()
+    if test is None:
+        messages.info(request, "У этого урока нет тренажёра.")
+        return redirect("web:lesson-detail", pk=lesson.id)
+    if not services.lesson_is_unlocked(request.user, lesson):
+        return redirect("web:course-detail", pk=course.id)
+    questions = test.questions.prefetch_related("choices").order_by("order", "id")
+    context = {"lesson": lesson, "course": course, "test": test, "questions": questions}
+    return render(request, "web/trainer.html", context)
+
+
+@login_required
+@require_POST
+def trainer_submit(request, pk):
+    """Проверка ответов тренажёра + завершение урока при успехе."""
+    lesson = get_object_or_404(Material, pk=pk)
+    test = lesson.tests.first()
+    if test is None:
+        return redirect("web:lesson-detail", pk=lesson.id)
+
+    answers = []
+    for question in test.questions.all():
+        chosen = request.POST.getlist(f"q_{question.id}")
+        answers.append(
+            {"question": question.id, "choices": [int(c) for c in chosen if c.isdigit()]}
+        )
+
+    skills_before = set(_profile(request.user).skills.values_list("skill_id", flat=True))
+    result = grade_test(request.user, test, answers)
+
+    new_skills = []
+    if result["is_passed"]:
+        services.mark_material_complete(request.user, lesson)
+        profile = _profile(request.user)
+        new_skills = list(
+            profile.skills.exclude(skill_id__in=skills_before).select_related("skill")
+        )
+
+    context = {
+        "lesson": lesson,
+        "course": lesson.section.course,
+        "result": result,
+        "new_skills": new_skills,
+        "next_lesson": services.next_lesson(request.user, lesson.section.course),
+    }
+    return render(request, "web/trainer_result.html", context)
 
 
 @login_required
@@ -174,12 +273,28 @@ def leaderboard(request):
 
 @login_required
 def profile_view(request):
-    """Профиль игрока: достижения и последние начисления."""
+    """Профиль игрока: «Мои скиллы», достижения и история начислений."""
     profile = _profile(request.user)
-    earned = PlayerAchievement.objects.filter(profile=profile).select_related("achievement")
+    earned_skills = profile.skills.select_related("skill", "course").all()
+    all_skills = Skill.objects.all()
+    earned_ids = set(profile.skills.values_list("skill_id", flat=True))
+    enrollments = (
+        Enrollment.objects.filter(user=request.user)
+        .select_related("course")
+        .order_by("-started_at")
+    )
     context = {
         "profile": profile,
-        "earned": earned,
+        "earned_skills": earned_skills,
+        "all_skills": all_skills,
+        "earned_skill_ids": earned_ids,
+        "enrollments": enrollments,
+        "achievements": Achievement.objects.all(),
+        "earned_achievement_ids": set(
+            PlayerAchievement.objects.filter(profile=profile).values_list(
+                "achievement_id", flat=True
+            )
+        ),
         "transactions": profile.transactions.all()[:10],
     }
     return render(request, "web/profile.html", context)

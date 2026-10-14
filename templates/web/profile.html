@@ -3,6 +3,7 @@
 
 {% block content %}
 <div class="grid lg:grid-cols-3 gap-6">
+  <!-- Карточка игрока -->
   <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
     <div class="h-20 w-20 rounded-full bg-brand-600/30 grid place-items-center text-4xl mx-auto">🧙</div>
     <div class="mt-4 text-center">
@@ -23,42 +24,93 @@
         <div class="text-xs text-slate-500">Серия</div>
       </div>
     </div>
+    <div class="mt-5">
+      <div class="flex justify-between text-xs text-slate-400 mb-1">
+        <span>До уровня {{ profile.level|add:1 }}</span>
+        <span>{{ profile.level_progress_percent }}%</span>
+      </div>
+      <div class="h-2 rounded-full bg-slate-800 overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-brand-500 to-fuchsia-500"
+             style="width: {{ profile.level_progress_percent }}%"></div>
+      </div>
+    </div>
   </div>
 
   <div class="lg:col-span-2 space-y-6">
+    <!-- Мои скиллы -->
     <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-      <h3 class="font-semibold mb-4">Полученные достижения</h3>
-      {% if earned %}
+      <h3 class="font-semibold mb-1">🧠 Мои скиллы</h3>
+      <p class="text-xs text-slate-500 mb-4">Уровень {{ profile.level }} · получено навыков: {{ earned_skills|length }} из {{ all_skills|length }}</p>
+
+      {% if earned_skills %}
         <div class="grid sm:grid-cols-2 gap-3">
-          {% for pa in earned %}
-            <div class="flex items-center gap-3 rounded-xl bg-slate-950/50 border border-slate-800 p-3">
-              <span class="text-2xl">{{ pa.achievement.icon }}</span>
+          {% for ps in earned_skills %}
+            <div class="flex items-center gap-3 rounded-xl bg-brand-600/10 border border-brand-500/40 p-3">
+              <span class="text-2xl">{{ ps.skill.icon }}</span>
               <div>
-                <div class="font-medium">{{ pa.achievement.title }}</div>
-                <div class="text-xs text-slate-500">{{ pa.achievement.description }}</div>
+                <div class="font-medium">{{ ps.skill.title }}</div>
+                <div class="text-xs text-slate-400">{{ ps.skill.description }}</div>
               </div>
             </div>
           {% endfor %}
         </div>
       {% else %}
-        <p class="text-slate-500 text-sm">Достижений пока нет — начните обучение!</p>
+        <p class="text-slate-500 text-sm">Навыков пока нет — начните проходить уроки, чтобы открыть первый.</p>
       {% endif %}
     </div>
 
+    <!-- Полный список знаний -->
     <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-      <h3 class="font-semibold mb-4">Последние начисления опыта</h3>
-      {% if transactions %}
-        <ul class="divide-y divide-slate-800 text-sm">
-          {% for tx in transactions %}
-            <li class="flex justify-between py-2">
-              <span class="text-slate-400">{{ tx.reason|default:"активность" }}</span>
-              <span class="font-semibold text-emerald-400">+{{ tx.amount }} XP</span>
-            </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="text-slate-500 text-sm">Пока нет начислений.</p>
-      {% endif %}
+      <h3 class="font-semibold mb-4">📚 Полный список знаний</h3>
+      <ul class="space-y-2">
+        {% for skill in all_skills %}
+          <li class="flex items-center gap-3 rounded-lg px-3 py-2
+                     {% if skill.id in earned_skill_ids %}bg-slate-950/60{% else %}opacity-50{% endif %}">
+            <span class="text-lg">{% if skill.id in earned_skill_ids %}{{ skill.icon }}{% else %}🔒{% endif %}</span>
+            <span class="flex-1">{{ skill.title }}</span>
+            {% if skill.id in earned_skill_ids %}
+              <span class="text-xs text-emerald-400">Получен</span>
+            {% else %}
+              <span class="text-xs text-slate-500">Не открыт</span>
+            {% endif %}
+          </li>
+        {% empty %}
+          <li class="text-slate-500 text-sm">Навыки ещё не определены.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Уровни по курсам -->
+    {% if enrollments %}
+      <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+        <h3 class="font-semibold mb-4">🎖️ Курсы и уровни</h3>
+        {% for e in enrollments %}
+          <div class="mb-3">
+            <div class="flex justify-between text-sm">
+              <span>{{ e.course.title }}</span>
+              <span class="text-brand-300">Уровень {{ e.course_level }} · {{ e.xp }} XP</span>
+            </div>
+            <div class="mt-1 h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div class="h-full bg-brand-500" style="width: {{ e.course_level_progress_percent }}%"></div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Достижения -->
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <h3 class="font-semibold mb-4">🏆 Достижения</h3>
+      <div class="grid grid-cols-4 sm:grid-cols-7 gap-3">
+        {% for ach in achievements %}
+          <div class="text-center" title="{{ ach.title }}">
+            <div class="h-12 w-12 mx-auto rounded-xl grid place-items-center text-2xl
+                        {% if ach.id in earned_achievement_ids %}bg-brand-600/30{% else %}bg-slate-800 opacity-40{% endif %}">
+              {{ ach.icon }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
     </div>
   </div>
 </div>

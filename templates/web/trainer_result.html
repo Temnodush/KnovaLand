@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Результат тренажёра — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto text-center">
+  {% if result.is_passed %}
+    <div class="text-6xl mb-3">🏆</div>
+    <h1 class="text-3xl font-bold text-emerald-400">Испытание пройдено!</h1>
+  {% else %}
+    <div class="text-6xl mb-3">💥</div>
+    <h1 class="text-3xl font-bold text-amber-400">Почти получилось</h1>
+  {% endif %}
+
+  <p class="text-slate-400 mt-2">
+    Правильных ответов: <span class="font-bold text-slate-100">{{ result.score }} / {{ result.total }}</span>
+    ({{ result.percentage }}%). Проходной балл — {{ result.passing_score }}%.
+  </p>
+
+  <div class="mt-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+    <div class="text-sm text-slate-400 mb-3">Разбор ответов</div>
+    <div class="flex flex-wrap justify-center gap-2">
+      {% for d in result.details %}
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold
+                     {% if d.is_correct %}bg-emerald-700/40 text-emerald-200{% else %}bg-red-800/40 text-red-200{% endif %}">
+          {% if d.is_correct %}✓{% else %}✕{% endif %}
+        </span>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if result.is_passed %}
+    <div class="mt-6 rounded-2xl border border-emerald-800 bg-emerald-900/20 p-4 text-emerald-200 text-sm">
+      Урок засчитан · +{{ result.score|add:"0" }} ⚔️ · +100 XP за урок · +50 XP за тренажёр
+    </div>
+  {% endif %}
+
+  {% if new_skills %}
+    <div class="mt-6 rounded-2xl border border-brand-500 bg-brand-600/10 p-5">
+      <div class="text-sm text-slate-300 mb-2">🎉 Открыт новый навык!</div>
+      {% for ps in new_skills %}
+        <div class="flex items-center justify-center gap-2 text-lg font-semibold text-brand-300">
+          <span>{{ ps.skill.icon }}</span> {{ ps.skill.title }}
+        </div>
+        <div class="text-xs text-slate-400 mt-1">{{ ps.skill.description }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="mt-8 flex flex-wrap justify-center gap-3">
+    <a href="{% url 'web:lesson-detail' lesson.id %}"
+       class="rounded-xl bg-slate-800 px-6 py-3 hover:bg-slate-700">К уроку</a>
+    {% if result.is_passed and next_lesson %}
+      <a href="{% url 'web:lesson-detail' next_lesson.id %}"
+         class="rounded-xl bg-brand-600 px-6 py-3 font-semibold hover:bg-brand-500">
+        Следующий урок →
+      </a>
+    {% endif %}
+    {% if not result.is_passed %}
+      <a href="{% url 'web:trainer' lesson.id %}"
+         class="rounded-xl bg-brand-600 px-6 py-3 font-semibold hover:bg-brand-500">Пройти заново</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

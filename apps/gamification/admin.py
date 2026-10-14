@@ -6,6 +6,9 @@ from .models import (
     MaterialProgress,
     PlayerAchievement,
     PlayerProfile,
+    PlayerSkill,
+    SectionSkill,
+    Skill,
     XPTransaction,
 )
 
@@ -16,12 +19,37 @@ class PlayerAchievementInline(admin.TabularInline):
     readonly_fields = ("achievement", "earned_at")
 
 
+class PlayerSkillInline(admin.TabularInline):
+    model = PlayerSkill
+    extra = 0
+    readonly_fields = ("skill", "earned_at")
+
+
 @admin.register(PlayerProfile)
 class PlayerProfileAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "level", "xp", "streak_days", "last_activity_date")
     list_filter = ("level",)
     search_fields = ("user__email", "user__username")
-    inlines = (PlayerAchievementInline,)
+    inlines = (PlayerAchievementInline, PlayerSkillInline)
+
+
+@admin.register(Skill)
+class SkillAdmin(admin.ModelAdmin):
+    list_display = ("id", "icon", "title", "code", "order")
+    search_fields = ("title", "code")
+
+
+@admin.register(SectionSkill)
+class SectionSkillAdmin(admin.ModelAdmin):
+    list_display = ("id", "section", "skill")
+    list_filter = ("skill",)
+
+
+@admin.register(PlayerSkill)
+class PlayerSkillAdmin(admin.ModelAdmin):
+    list_display = ("id", "profile", "skill", "course", "earned_at")
+    list_filter = ("skill",)
+    search_fields = ("profile__user__email",)
 
 
 @admin.register(Achievement)
@@ -32,7 +60,7 @@ class AchievementAdmin(admin.ModelAdmin):
 
 @admin.register(Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "course", "started_at", "completed_at")
+    list_display = ("id", "user", "course", "xp", "started_at", "completed_at")
     list_filter = ("course",)
     search_fields = ("user__email", "course__title")
 

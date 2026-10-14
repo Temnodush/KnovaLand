@@ -11,12 +11,24 @@ from .models import Enrollment, MaterialProgress
 
 @receiver(post_save, sender=TestSubmission)
 def on_test_submission(sender, instance, created, **kwargs):
-    """Начислить опыт за сданный тест (10 + 10 за каждый правильный ответ)."""
+    """Начислить глобальный и курсовой опыт за сданный тест.
+
+    Глобально: 10 + 10 за каждый правильный ответ.
+    Курсовой опыт — только при успешной сдаче (passing_score).
+    """
     if not created:
         return
     profile = services.get_profile(instance.user)
     reward = 10 + instance.score * 10
     services.award_xp(profile, reward, reason=f"test:{instance.test_id}")
+    if instance.is_passed:
+        course = instance.test.material.section.course
+        services.award_course_xp(
+            instance.user,
+            course,
+            services.XP_PER_TRAINER_PASS,
+            reason=f"trainer:{instance.test_id}",
+        )
 
 
 @receiver(post_save, sender=MaterialProgress)

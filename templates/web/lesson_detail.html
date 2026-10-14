@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load markdown_extras %}
+{% block title %}{{ lesson.title }} — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<nav class="text-sm text-slate-500 mb-4">
+  <a href="{% url 'web:course-detail' course.id %}" class="hover:text-brand-300">{{ course.title }}</a>
+  <span class="mx-1">/</span>
+  <span>{{ section.title }}</span>
+</nav>
+
+<article class="prose-lesson">
+  <h1 class="text-3xl font-bold mb-6">{{ lesson.title }}</h1>
+  <div class="lesson-content space-y-4 text-slate-200">
+    {{ lesson.content|markdownify }}
+  </div>
+</article>
+
+<div class="mt-10 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+  {% if completed %}
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">✅</span>
+        <div>
+          <div class="font-semibold">Урок пройден</div>
+          <div class="text-sm text-slate-400">Отличная работа!</div>
+        </div>
+      </div>
+      {% if next_lesson %}
+        <a href="{% url 'web:lesson-detail' next_lesson.id %}"
+           class="rounded-xl bg-brand-600 px-6 py-3 font-semibold hover:bg-brand-500">
+          Следующий урок →
+        </a>
+      {% endif %}
+    </div>
+  {% elif test %}
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">⚔️</span>
+        <div>
+          <div class="font-semibold">Впереди тренажёр</div>
+          <div class="text-sm text-slate-400">Проверьте знания, чтобы завершить урок</div>
+        </div>
+      </div>
+      <a href="{% url 'web:trainer' lesson.id %}"
+         class="rounded-xl bg-brand-600 px-6 py-3 font-semibold hover:bg-brand-500 glow">
+        Начать тренажёр
+      </a>
+    </div>
+  {% else %}
+    <form method="post" action="{% url 'web:complete-material' lesson.id %}"
+          hx-post="{% url 'web:complete-material' lesson.id %}" hx-target="this" hx-swap="outerHTML">
+      {% csrf_token %}
+      <button class="rounded-xl bg-brand-600 px-6 py-3 font-semibold hover:bg-brand-500">
+        Отметить урок пройденным (+10 XP)
+      </button>
+    </form>
+  {% endif %}
+</div>
+
+<style>
+  .lesson-content h2 { font-size: 1.35rem; font-weight: 700; margin-top: 1.5rem; }
+  .lesson-content h3 { font-size: 1.1rem; font-weight: 600; margin-top: 1rem; }
+  .lesson-content p { line-height: 1.7; }
+  .lesson-content ul { list-style: disc; padding-left: 1.5rem; }
+  .lesson-content ol { list-style: decimal; padding-left: 1.5rem; }
+  .lesson-content a { color: #818cf8; }
+  .lesson-content code {
+    background: #1e293b; padding: 0.15rem 0.4rem; border-radius: 0.35rem;
+    font-size: 0.875rem; color: #f0abfc;
+  }
+  .lesson-content pre {
+    background: #020617; border: 1px solid #1e293b; border-radius: 0.75rem;
+    padding: 1rem 1.25rem; overflow-x: auto; margin: 1rem 0;
+  }
+  .lesson-content pre code { background: transparent; color: #e2e8f0; padding: 0; }
+  .lesson-content blockquote {
+    border-left: 3px solid #6366f1; padding-left: 1rem; color: #94a3b8; margin: 1rem 0;
+  }
+  .lesson-content table { border-collapse: collapse; margin: 1rem 0; }
+  .lesson-content th, .lesson-content td { border: 1px solid #334155; padding: 0.5rem 0.75rem; }
+</style>
+{% endblock %}
