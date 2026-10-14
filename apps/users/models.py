@@ -25,6 +25,7 @@ class User(AbstractUser):
         verbose_name="Роль",
     )
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True, verbose_name="Аватар")
+    email_verified = models.BooleanField(default=False, verbose_name="Email подтверждён")
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]

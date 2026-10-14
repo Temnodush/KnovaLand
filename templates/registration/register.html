@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Регистрация — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10">
+  <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-8">
+    <div class="flex flex-col items-center mb-6">
+      <img src="{% static 'logo.png' %}" alt="{{ SITE_NAME }}" class="h-16 w-16 rounded-xl object-cover mb-3">
+      <h1 class="text-2xl font-bold">Регистрация в {{ SITE_NAME }}</h1>
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="mb-4 rounded-lg border border-red-800 bg-red-900/30 px-4 py-2 text-red-200 text-sm">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% for field in form %}
+        <div>
+          <label class="block text-sm text-slate-400 mb-1" for="{{ field.id_for_label }}">
+            {{ field.label }}
+          </label>
+          {{ field }}
+          {% if field.help_text %}
+            <p class="mt-1 text-xs text-slate-500">{{ field.help_text|safe }}</p>
+          {% endif %}
+          {% for error in field.errors %}
+            <p class="mt-1 text-xs text-red-400">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endfor %}
+
+      <button class="w-full rounded-lg bg-brand-600 py-2.5 font-semibold hover:bg-brand-500">
+        Зарегистрироваться
+      </button>
+    </form>
+
+    <p class="mt-4 text-center text-sm text-slate-400">
+      Уже есть аккаунт?
+      <a class="text-brand-400 hover:text-brand-300" href="{% url 'web:login' %}">Войти</a>
+    </p>
+    <p class="mt-2 text-center text-xs text-slate-500">
+      После регистрации мы отправим письмо для подтверждения email.
+    </p>
+  </div>
+</div>
+
+<style>
+  /* Единый стиль полей формы Django под тёмную тему */
+  input[type="text"], input[type="email"], input[type="password"], select {
+    width: 100%;
+    border-radius: 0.5rem;
+    background: #020617;
+    border: 1px solid #334155;
+    padding: 0.625rem 1rem;
+    color: #e2e8f0;
+  }
+  input:focus, select:focus { outline: none; border-color: #6366f1; }
+</style>
+{% endblock %}

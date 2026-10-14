@@ -3,6 +3,7 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from .emails import try_send_verification_email
 from .permissions import IsAdmin
 from .serializers import (
     RegisterSerializer,
@@ -14,7 +15,7 @@ User = get_user_model()
 
 
 class RegisterView(generics.CreateAPIView):
-    """POST /api/auth/register/ — регистрация пользователя."""
+    """POST /api/auth/register/ — регистрация пользователя + письмо подтверждения."""
 
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
@@ -24,6 +25,7 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        try_send_verification_email(request, user)
         return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
 

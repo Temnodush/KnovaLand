@@ -28,7 +28,7 @@
   <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-20">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
       <a href="{% url 'web:home' %}" class="flex items-center gap-2 font-bold text-lg">
-        <span class="text-2xl">🐍</span>
+        <img src="{% static 'logo.png' %}" alt="{{ SITE_NAME }}" class="h-9 w-9 rounded-lg object-cover">
         <span class="bg-gradient-to-r from-brand-400 to-fuchsia-400 bg-clip-text text-transparent">{{ SITE_NAME }}</span>
       </a>
       <nav class="flex items-center gap-5 text-sm text-slate-300">
@@ -53,6 +53,18 @@
       </nav>
     </div>
   </header>
+
+  {% if user.is_authenticated and not user.email_verified %}
+    <div class="max-w-6xl mx-auto px-4 mt-4">
+      <div class="flex items-center justify-between gap-4 rounded-lg border border-amber-700 bg-amber-900/30 px-4 py-2 text-amber-100 text-sm">
+        <span>✉️ Email не подтверждён. Проверьте почту и перейдите по ссылке из письма.</span>
+        <form method="post" action="{% url 'web:resend-verification' %}">
+          {% csrf_token %}
+          <button class="rounded-md bg-amber-700 px-3 py-1 hover:bg-amber-600">Отправить снова</button>
+        </form>
+      </div>
+    </div>
+  {% endif %}
 
   {% if messages %}
     <div class="max-w-6xl mx-auto px-4 mt-4 space-y-2">

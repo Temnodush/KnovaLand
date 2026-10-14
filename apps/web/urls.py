@@ -13,6 +13,10 @@ urlpatterns = [
     path("materials/<int:pk>/complete/", views.complete_material, name="complete-material"),
     path("leaderboard/", views.leaderboard, name="leaderboard"),
     path("profile/", views.profile_view, name="profile"),
+    # Регистрация и подтверждение email
+    path("register/", views.register, name="register"),
+    path("verify-email/resend/", views.resend_verification, name="resend-verification"),
+    path("verify-email/<str:token>/", views.verify_email, name="verify-email"),
     path(
         "login/",
         auth_views.LoginView.as_view(template_name="registration/login.html"),

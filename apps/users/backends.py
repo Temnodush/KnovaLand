@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.db.models import Q
@@ -28,6 +29,11 @@ class EmailOrUsernameBackend(ModelBackend):
                 .order_by("id")
                 .first()
             )
-        if user.check_password(password) and self.user_can_authenticate(user):
+        if not user.check_password(password):
+            return None
+        # Если включено обязательное подтверждение email — неподтверждённых не пускаем.
+        if getattr(settings, "EMAIL_VERIFICATION_REQUIRED", False) and not user.email_verified:
+            return None
+        if self.user_can_authenticate(user):
             return user
         return None

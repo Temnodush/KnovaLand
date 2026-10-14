@@ -20,9 +20,10 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
             "role_display",
             "avatar",
+            "email_verified",
             "date_joined",
         )
-        read_only_fields = ("id", "email", "role", "date_joined")
+        read_only_fields = ("id", "email", "role", "email_verified", "date_joined")
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -76,6 +77,7 @@ class UserAdminSerializer(serializers.ModelSerializer):
             "role",
             "is_active",
             "is_staff",
+            "email_verified",
             "date_joined",
         )
         read_only_fields = ("id", "date_joined")
